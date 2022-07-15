@@ -14,12 +14,13 @@ class Movies extends Component{
     }
 
     render(){
+        let {length: count}  = this.state.movies
         return(
             <div className='container pt-4'>
                 <h1>Movie Lists</h1>
                 <p className='badge badge-info'>See if movies are available in the table</p>
                 <div className='pt-4'>
-                    <p>Showing <span className='badge badge-dark'>{this.state.movies.length} </span> movies in the database</p>
+                    <p>Showing <span className='badge badge-dark'>{count} </span> movies in the database</p>
                     <table className="table">
                         <thead>
                             <tr>
@@ -31,6 +32,7 @@ class Movies extends Component{
                             </tr>
                         </thead>
                         <tbody>
+                            {(count===0)  &&  <h6 className='mt-2'>There are no movies in the database</h6>}  
                             {this.state.movies.map((movie)=> {
                                 return(
                                     <tr key={movie._id}>
