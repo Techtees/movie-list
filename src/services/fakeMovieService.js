@@ -6,7 +6,8 @@ const movies = [
     title: "Lion",
     genre: { _id: "5b21ca3eeb7f6fbccd471820", name: "Thriller" },
     numberInStock: 7,
-    dailyRentalRate: 4.5
+    dailyRentalRate: 4.5,
+    liked:true
   },
   {
     _id: "5b21caahsjif6fbccd47181f",
