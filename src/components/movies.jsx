@@ -2,7 +2,10 @@ import React, { Component} from 'react'
 import { getMovies } from  "../services/fakeMovieService"
 import Like from './common/like'
 import Pagination from './common/pagination'
+import ListGroup from './common/listGroup'
 import { paginate } from './utils/paginate'
+import { getGenres } from '../services/fakeGenreService'
+import { filter } from 'lodash'
 
 
 const navStyles = {
@@ -12,9 +15,14 @@ const navStyles = {
 
 class Movies extends Component{
     state = {
-      movies: getMovies(),
+      movies: [],
+      genres:[],
       pageSize:5,
-      currentPage:1     
+      currentPage:1,   
+    }
+    componentDidMount(){
+        const genres = [{name:'All Genres'}, ...getGenres()]
+        this.setState({ movies:getMovies(), genres:genres });
     }
 
     handleDelete = (movie)=> {
@@ -45,17 +53,27 @@ class Movies extends Component{
             // icon.style.fill='#000'
         })
     }
+    handleGenreSelect=(genre) => {
+        this.setState({selectedGenre: genre,currentPage: 1})
+        console.log(genre)
+    }
 
     render(){
         let {length: count}  = this.state.movies
-        const {pageSize,currentPage, movies: allMovies} = this.state
-        const movies = paginate(allMovies,currentPage,pageSize)
+        const {pageSize,currentPage, movies: allMovies, selectedGenre} = this.state
+        const filtered = selectedGenre && selectedGenre._id ? allMovies.filter((m)=> m.genre._id === selectedGenre._id) : allMovies
+        const movies = paginate(filtered,currentPage,pageSize)
         return(
             <div className='container pt-4'>
                 <h1>Movie Lists</h1>
                 <div className="row col-md-12 pt-4">
-                    <div className="col-md-4" style={{}}>
-                        <div className='border' style={{height:'230px', width:'200px',margin:'0 auto'}}>
+                    <div className="col-md-3">
+                        <ListGroup
+                         items = {this.state.genres} 
+                         selectedItem = {this.state.selectedGenre}
+                         onItemSelect={this.handleGenreSelect} 
+                         />
+                        {/* <div className='border' style={{height:'230px', width:'200px',margin:'0 auto'}}>
                             <div className='border-bottom p-3'>
                                  <span style={navStyles}>All Genre</span>
                             </div>
@@ -68,11 +86,12 @@ class Movies extends Component{
                             <div className='p-3'>
                                  <span style={navStyles}>Thriller</span>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                     <div className='col'>
                         <div className=''>
-                            <p>Showing <span className='badge badge-dark'>{count} </span> movies in the database</p>
+                            <p>Showing <span className='badge badge-dark'>{filtered.length} </span> movies in the database</p>
+                            {(count===0)  &&  <h6 className='mt-2'>There are no movies in the database</h6>}
                             <table className="table">
                                 <thead>
                                     <tr>
@@ -84,8 +103,7 @@ class Movies extends Component{
                                         <th />
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    {(count===0)  &&  <h6 className='mt-2'>There are no movies in the database</h6>}  
+                                <tbody>  
                                     {movies.map((movie)=> {
                                         return(
                                             <tr key={movie._id}>
@@ -102,7 +120,7 @@ class Movies extends Component{
                                     })}
                                 </tbody>
                             </table>
-                            <Pagination itemCount={count} pageSize={pageSize} onPageChange={this.handlePageChange} currentPage={currentPage} />
+                            <Pagination itemCount={filtered.length} pageSize={pageSize} onPageChange={this.handlePageChange} currentPage={currentPage} />
                         </div>
                     </div>
                 </div>
