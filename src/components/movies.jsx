@@ -35,7 +35,15 @@ class Movies extends Component{
 
     }
     handleSort = (path) => {
-        this.setState({path, sortColumn: { path, order: 'asc'}}) // 
+        // to reverse sorting order
+        const sortColumn = {...this.state.sortColumn}
+        if ( sortColumn.path === path ) sortColumn.order = (sortColumn.order === 'asc'? 'desc':'asc')
+        else{
+            sortColumn.path= path;
+            sortColumn.order='asc'
+        }
+        
+        this.setState({sortColumn}) // 
     }
     handleLike = (movie) => {
         // function to handle the like toggle like : - movie object should not be changed directly, it should be clone into another array 
