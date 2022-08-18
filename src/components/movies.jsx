@@ -1,11 +1,11 @@
 import React, { Component} from 'react'
 import { getMovies } from  "../services/fakeMovieService"
-import Like from './common/like'
 import Pagination from './common/pagination'
 import ListGroup from './common/listGroup'
 import { paginate } from './utils/paginate'
 import { getGenres } from '../services/fakeGenreService'
-import { filter } from 'lodash'
+import MovieTable from './movieTable'
+import _ from 'lodash'
 
 
 const navStyles = {
@@ -19,9 +19,10 @@ class Movies extends Component{
       genres:[],
       pageSize:5,
       currentPage:1,   
+      sortColumn:{path:'title', order:'asc'}
     }
     componentDidMount(){
-        const genres = [{name:'All Genres'}, ...getGenres()]
+        const genres = [{_id: '',name:'All Genres'}, ...getGenres()]
         this.setState({ movies:getMovies(), genres:genres });
     }
 
@@ -33,7 +34,15 @@ class Movies extends Component{
         this.setState({currentPage : page})
 
     }
+    handleSort = (path) => {
+        this.setState({path, sortColumn: { path, order: 'asc'}}) // 
+    }
     handleLike = (movie) => {
+        // function to handle the like toggle like : - movie object should not be changed directly, it should be clone into another array 
+        // - then we find the index of the each items in the movie object 
+        // - clone the movie index into anothe movie object
+        //latly check if movies[index].liked = !movies[index].liked
+
         const movies =  [ ...this.state.movies]
         const index = movies.indexOf(movie);
         movies[index] = {...movies[index]};
@@ -59,10 +68,12 @@ class Movies extends Component{
     }
 
     render(){
-        let {length: count}  = this.state.movies
-        const {pageSize,currentPage, movies: allMovies, selectedGenre} = this.state
-        const filtered = selectedGenre && selectedGenre._id ? allMovies.filter((m)=> m.genre._id === selectedGenre._id) : allMovies
-        const movies = paginate(filtered,currentPage,pageSize)
+        let {length: count}  = this.state.movies // destructured the length of the movies
+        const {pageSize,currentPage, movies: allMovies, selectedGenre, sortColumn} = this.state // destructuring inputs
+        const filtered = selectedGenre && selectedGenre._id ? allMovies.filter((m)=> m.genre._id === selectedGenre._id) : allMovies // list group filter here to check if the genre of the list is smae as the movie genre
+        const sorted = _.orderBy(filtered,[sortColumn.path],[sortColumn.order]) // lodash method to sorth the array. - passed the filtered movie data, sorthcolum.path ( which is from the raised event from movie table component) and also the order)
+        const movies = paginate(sorted,currentPage,pageSize) //paginate function to help paginate the data into pages 
+       
         return(
             <div className='container pt-4'>
                 <h1>Movie Lists</h1>
@@ -71,6 +82,7 @@ class Movies extends Component{
                         <ListGroup
                          items = {this.state.genres} 
                          selectedItem = {this.state.selectedGenre}
+                         onSort={this.handleSort}
                          onItemSelect={this.handleGenreSelect} 
                          />
                         {/* <div className='border' style={{height:'230px', width:'200px',margin:'0 auto'}}>
@@ -92,34 +104,7 @@ class Movies extends Component{
                         <div className=''>
                             <p>Showing <span className='badge badge-dark'>{filtered.length} </span> movies in the database</p>
                             {(count===0)  &&  <h6 className='mt-2'>There are no movies in the database</h6>}
-                            <table className="table">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Title</th>
-                                        <th scope="col">Genre</th>
-                                        <th scope="col">Stock</th>
-                                        <th scope="col">Rate</th>
-                                        <th />
-                                        <th />
-                                    </tr>
-                                </thead>
-                                <tbody>  
-                                    {movies.map((movie)=> {
-                                        return(
-                                            <tr key={movie._id}>
-                                                <td>{movie.title}</td>
-                                                <td>{movie.genre.name}</td>
-                                                <td>{movie.numberInStock}</td>
-                                                <td>{movie.dailyRentalRate}</td>
-                                                <td>
-                                                    <Like liked={movie.liked} onClick={()=> this.handleLike(movie)} />
-                                                </td>
-                                                <td><button onClick={() => this.handleDelete(movie)} className='btn btn-danger btn-sm'>Delete</button></td>
-                                            </tr>
-                                        )
-                                    })}
-                                </tbody>
-                            </table>
+                            <MovieTable movies ={movies} onLike={this.handleLike} onDelete={this.handleDelete} onSort={this.handleSort} />
                             <Pagination itemCount={filtered.length} pageSize={pageSize} onPageChange={this.handlePageChange} currentPage={currentPage} />
                         </div>
                     </div>
